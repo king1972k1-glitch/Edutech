@@ -1,0 +1,186 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel – EduTech</title>
+  <style>
+    body {
+      background: linear-gradient(120deg, #0f0c29, #302b63, #24243e);
+      font-family: 'Segoe UI', sans-serif;
+      color: #00ffcc;
+      padding: 20px;
+    }
+    h2 {
+      text-align: center;
+      color: #00ffff;
+    }
+    .section {
+      border: 2px solid #00ffff;
+      border-radius: 10px;
+      padding: 20px;
+      margin: 20px auto;
+      max-width: 900px;
+    }
+    input, select, button, textarea {
+      padding: 10px;
+      margin: 5px;
+      border-radius: 6px;
+      border: 1px solid #00cccc;
+      background: #1a1a1a;
+      color: #00ffcc;
+      width: 100%;
+    }
+    button {
+      cursor: pointer;
+      background: #00ffcc;
+      color: #000;
+      font-weight: bold;
+    }
+    button:hover {
+      background: #00ffff;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      border: 1px solid #00cccc;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background: #1f1f3f;
+    }
+    .actions button {
+      margin: 2px 0;
+    }
+    @media (max-width: 768px) {
+      h2::after {
+        content: " (Mobile Mode)";
+        font-size: 14px;
+        color: #00ccff;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h2>🛠 Admin Panel – EduTech</h2>  <div class="section">
+    <h3>📢 Notification (Send to All Users)</h3>
+    <textarea id="notifMsg" placeholder="Enter message to broadcast..."></textarea>
+    <button onclick="sendNotification()">🚀 Send Notification</button>
+  </div>  <div class="section">
+    <h3>👥 All Users</h3>
+    <table>
+      <thead>
+        <tr><th>Name</th><th>Email</th><th>XP</th><th>Role</th><th>UID</th><th>Actions</th></tr>
+      </thead>
+      <tbody id="userTable"></tbody>
+    </table>
+  </div>  <div class="section">
+    <h3>📊 Quiz Analytics</h3>
+    <input id="anaSubject" placeholder="Subject (e.g. Science)" />
+    <input id="anaChapter" placeholder="Chapter (e.g. Chapter1)" />
+    <button onclick="countQuizzes()">📈 Count Uploaded Quizzes</button>
+    <p id="quizCount"></p>
+  </div>  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, getDocs, getDoc, doc, setDoc, deleteDoc, query } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAnmT_EMUajLzk0OEcuUsA6pjIJgJBqBm4",
+      authDomain: "quiz-dashboard-9a4ea.firebaseapp.com",
+      projectId: "quiz-dashboard-9a4ea",
+      storageBucket: "quiz-dashboard-9a4ea.appspot.com",
+      messagingSenderId: "901225401260",
+      appId: "1:901225401260:web:3879c1e3501ffe1cc08809"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth();
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) return location.href = "index.html";
+      const ref = doc(db, "users", user.uid);
+      const snap = await getDoc(ref);
+      if (!snap.exists() || snap.data().role !== "admin") {
+        alert("Access Denied – Admins Only");
+        location.href = "dashboard.html";
+      } else {
+        loadUsers();
+      }
+    });
+
+    async function sendNotification() {
+      const msg = document.getElementById("notifMsg").value.trim();
+      if (!msg) return alert("Please enter a message");
+      try {
+        await setDoc(doc(db, "announcements", "latest"), {
+          message: msg,
+          timestamp: Date.now()
+        });
+        alert("✅ Notification sent!");
+        document.getElementById("notifMsg").value = "";
+      } catch (e) {
+        alert("Error sending notification: " + e.message);
+      }
+    }
+
+    async function loadUsers() {
+      const snap = await getDocs(collection(db, "users"));
+      const tbody = document.getElementById("userTable");
+      tbody.innerHTML = "";
+
+      snap.forEach(docSnap => {
+        const u = docSnap.data();
+        const uid = docSnap.id;
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${u.name || "N/A"}</td>
+          <td>${u.email || "Hidden"}</td>
+          <td>${u.xp || 0}</td>
+          <td>${u.role || "student"}</td>
+          <td>${uid}</td>
+          <td class='actions'>
+            <button onclick="modifyXP('${uid}', ${u.xp || 0})">🎯 Modify XP</button>
+            <button onclick="location.href='user-history.html?uid=${uid}'">📜 History</button>
+            <button onclick="toggleBlock('${uid}', '${u.role || "student"}')">🚫 Block</button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    window.modifyXP = async function(uid, currentXP) {
+      const input = prompt("Enter XP to add/subtract (e.g. +50 or -20):");
+      const change = parseInt(input);
+      if (isNaN(change)) return alert("Invalid number");
+      const ref = doc(db, "users", uid);
+      await setDoc(ref, { xp: Math.max(0, currentXP + change) }, { merge: true });
+      alert("✅ XP updated!");
+      loadUsers();
+    }
+
+    window.toggleBlock = async function(uid, role) {
+      const newRole = role === "blocked" ? "student" : "blocked";
+      await setDoc(doc(db, "users", uid), { role: newRole }, { merge: true });
+      alert(`User role updated to ${newRole}`);
+      loadUsers();
+    }
+
+    window.countQuizzes = async function () {
+      const subject = document.getElementById("anaSubject").value.trim();
+      const chapter = document.getElementById("anaChapter").value.trim();
+      if (!subject || !chapter) return alert("Please enter subject and chapter");
+
+      let total = 0;
+      const allDocs = await getDocs(collection(db, "quizzes"));
+      allDocs.forEach(d => {
+        if (d.id.startsWith(`${subject}_${chapter}_`)) total++;
+      });
+      document.getElementById("quizCount").textContent = `📊 Total quizzes uploaded: ${total}`;
+    }
+  </script></body>
+</html>

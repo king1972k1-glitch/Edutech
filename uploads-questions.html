@@ -1,0 +1,118 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bulk Upload Questions – EduTech</title>
+  <style>
+    body {
+      background: linear-gradient(120deg, #0f0c29, #302b63, #24243e);
+      color: #00ffcc;
+      font-family: 'Segoe UI', sans-serif;
+      padding: 20px;
+    }
+    h2 {
+      text-align: center;
+      color: #00ffff;
+    }
+    .container {
+      max-width: 700px;
+      margin: auto;
+      background: #1a1a1a;
+      padding: 20px;
+      border-radius: 12px;
+      border: 2px solid #00ffff;
+      box-shadow: 0 0 20px #00ffff66;
+    }
+    select, textarea, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 15px;
+      font-size: 1em;
+      border-radius: 8px;
+      border: 2px solid #00ffcc;
+      background: #000;
+      color: #00ffcc;
+    }
+    button {
+      background: #00ffcc;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #00ffff;
+    }
+  </style>
+</head>
+<body>
+  <h2>📤 Bulk Upload Questions</h2>
+  <div class="container">
+    <label>Subject</label>
+    <select id="subject">
+      <option value="Science">Science</option>
+      <option value="Math">Math</option>
+      <option value="S.St">S.St</option>
+      <option value="English">English</option>
+      <option value="Hindi">Hindi</option>
+    </select><label>Chapter</label>
+<input type="text" id="chapter" placeholder="Enter chapter name..." />
+
+<label>Paste Questions (JSON Array)</label>
+<textarea id="jsonInput" rows="12" placeholder='[
+
+{ "question": "What is the capital of India?", "options": ["Delhi", "Mumbai", "Chennai", "Kolkata"], "answer": "Delhi" } ]'></textarea>
+
+<button onclick="uploadQuestions()">🚀 Upload to Firestore</button>
+<p id="status"></p>
+
+  </div>  <script type="module">
+    // 🔐 Admin Password Prompt
+    const password = prompt("Enter admin password:");
+    if (password !== "5432109") {
+      alert("❌ Unauthorized access!");
+      location.href = "index.html";
+    }
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAnmT_EMUajLzk0OEcuUsA6pjIJgJBqBm4",
+      authDomain: "quiz-dashboard-9a4ea.firebaseapp.com",
+      projectId: "quiz-dashboard-9a4ea",
+      storageBucket: "quiz-dashboard-9a4ea.appspot.com",
+      messagingSenderId: "901225401260",
+      appId: "1:901225401260:web:3879c1e3501ffe1cc08809"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    window.uploadQuestions = async function () {
+      const subject = document.getElementById("subject").value;
+      const chapter = document.getElementById("chapter").value.trim();
+      const raw = document.getElementById("jsonInput").value;
+      const status = document.getElementById("status");
+      status.textContent = "";
+
+      try {
+        const questions = JSON.parse(raw);
+        if (!Array.isArray(questions)) throw new Error("JSON must be an array");
+
+        for (let q of questions) {
+          await addDoc(collection(db, "quiz_questions"), {
+            subject,
+            chapter,
+            question: q.question,
+            options: q.options,
+            answer: q.answer
+          });
+        }
+
+        status.innerHTML = `✅ Successfully uploaded ${questions.length} questions!`;
+      } catch (err) {
+        console.error(err);
+        status.innerHTML = `<span style='color:red;'>❌ Error: ${err.message}</span>`;
+      }
+    }
+  </script></body>
+</html>

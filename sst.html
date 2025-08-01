@@ -1,0 +1,102 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Social Science – EduTech</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(120deg, #0f0c29, #302b63, #24243e);
+      color: #00ffcc;
+      padding: 20px;
+      text-align: center;
+    }
+    h2 {
+      color: #00ffff;
+    }
+    .card {
+      display: inline-block;
+      background: #1a1a1a;
+      padding: 20px;
+      margin: 10px;
+      border: 2px solid #00cccc;
+      border-radius: 10px;
+      width: 250px;
+      transition: transform 0.2s ease;
+      cursor: pointer;
+    }
+    .card:hover {
+      transform: scale(1.05);
+      background: #00ffff33;
+    }
+    .quiz-btn {
+      margin: 4px;
+      padding: 6px 10px;
+      border: 1px solid #00cccc;
+      background: #1a1a1a;
+      color: #00ffcc;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .quiz-btn:hover {
+      background: #00ffcc;
+      color: #000;
+    }
+  </style>
+</head>
+<body>
+  <h2>🌍 Social Science – Class 10</h2>
+  <div id="chapterContainer"></div>  <script>
+    const chapters = [
+      "History Chapter1: The Rise of Nationalism in Europe",
+      "History Chapter2: Nationalism in India",
+      "History Chapter3: The Making of a Global World",
+      "Civics Chapter1: Power Sharing",
+      "Civics Chapter2: Federalism",
+      "Civics Chapter3: Democracy and Diversity",
+      "Civics Chapter4: Gender, Religion and Caste",
+      "Civics Chapter5: Popular Struggles and Movements",
+      "Civics Chapter6: Political Parties",
+      "Civics Chapter7: Outcomes of Democracy",
+      "Geography Chapter1: Resources and Development",
+      "Geography Chapter2: Forest and Wildlife Resources",
+      "Geography Chapter3: Water Resources",
+      "Geography Chapter4: Agriculture",
+      "Geography Chapter5: Minerals and Energy Resources",
+      "Geography Chapter6: Manufacturing Industries",
+      "Geography Chapter7: Lifelines of National Economy",
+      "Economics Chapter1: Development",
+      "Economics Chapter2: Sectors of Indian Economy",
+      "Economics Chapter3: Money and Credit",
+      "Economics Chapter4: Globalisation and the Indian Economy",
+      "Economics Chapter5: Consumer Rights"
+    ];
+
+    const container = document.getElementById("chapterContainer");
+
+    chapters.forEach((chapter, index) => {
+      const [subjectArea, chapterTitle] = chapter.split(': ');
+      const chapterCode = `Chapter${index + 1}`;
+      const chapterDiv = document.createElement("div");
+      chapterDiv.className = "card";
+      chapterDiv.innerHTML = `<b>${chapter}</b><br><br><div id='quizBtns${index}'></div>`;
+
+      const quizBtnsDiv = chapterDiv.querySelector(`#quizBtns${index}`);
+      for (let i = 1; i <= 40; i++) {
+        const btn = document.createElement("button");
+        btn.className = "quiz-btn";
+        btn.textContent = `Quiz ${i}`;
+        btn.onclick = () => startQuiz("S.St", chapterCode, `Quiz${i}`);
+        quizBtnsDiv.appendChild(btn);
+      }
+      container.appendChild(chapterDiv);
+    });
+
+    function startQuiz(subject, chapter, quiz) {
+      localStorage.setItem("selectedSubject", subject);
+      localStorage.setItem("selectedChapter", chapter);
+      localStorage.setItem("selectedQuiz", quiz);
+      window.location.href = "quiz.html";
+    }
+  </script></body>
+</html>

@@ -1,0 +1,100 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EduTech Quiz</title>
+  <style>
+    body {
+      background: linear-gradient(120deg, #0f0c29, #302b63, #24243e);
+      color: #00ffcc;
+      font-family: 'Segoe UI', sans-serif;
+      text-align: center;
+      padding: 40px;
+    }
+    h2 {
+      color: #00ffff;
+    }
+    .login-btn {
+      padding: 12px 24px;
+      font-size: 1.1em;
+      font-weight: bold;
+      background: #00ffcc;
+      border: none;
+      border-radius: 8px;
+      color: #000;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    .login-btn:hover {
+      background: #00ffff;
+    }
+    .tagline {
+      font-size: 1.2em;
+      margin-top: 10px;
+      color: #00ffff;
+      font-weight: bold;
+    }
+    .secure-note {
+      font-size: 0.9em;
+      color: #00ffaa;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <img src="https://cdn-icons-png.flaticon.com/512/190/190411.png" width="100" style="margin-bottom: 10px;" alt="Logo">
+  <h2>📝 EduTech Quiz</h2>
+  <div class="tagline">🎓 Your Learning Journey Starts Here!</div>
+  <button class="login-btn" onclick="loginWithGoogle()">Login with Google</button>
+  <div class="secure-note">🔐 We don’t store passwords. 100% secured with Google.</div>  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAnmT_EMUajLzk0OEcuUsA6pjIJgJBqBm4",
+      authDomain: "quiz-dashboard-9a4ea.firebaseapp.com",
+      projectId: "quiz-dashboard-9a4ea",
+      storageBucket: "quiz-dashboard-9a4ea.appspot.com",
+      messagingSenderId: "901225401260",
+      appId: "1:901225401260:web:3879c1e3501ffe1cc08809"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth();
+
+    onAuthStateChanged(auth, user => {
+      if (user) location.href = "dashboard.html";
+    });
+
+    window.loginWithGoogle = async function () {
+      const provider = new GoogleAuthProvider();
+      try {
+        const result = await signInWithPopup(auth, provider);
+        const user = result.user;
+
+        const ref = doc(db, "users", user.uid);
+        const snap = await getDoc(ref);
+        if (!snap.exists()) {
+          await setDoc(ref, {
+            name: user.displayName,
+            email: user.email,
+            avatar: user.photoURL,
+            xp: 0,
+            role: "student",
+            created: new Date()
+          });
+        }
+
+        location.href = "dashboard.html";
+      } catch (error) {
+        alert("Login failed: " + error.message);
+      }
+    }
+  </script>  <div style="margin-top: 40px; font-size: 0.85em; color: #00cccc;">
+    <a href="#" style="color: #00cccc; text-decoration: underline; margin-right: 10px;">Terms</a>
+    <a href="#" style="color: #00cccc; text-decoration: underline;">Privacy Policy</a>
+  </div>
+</body>
+</html>

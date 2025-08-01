@@ -1,0 +1,100 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>English – EduTech</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(120deg, #0f0c29, #302b63, #24243e);
+      color: #00ffcc;
+      padding: 20px;
+      text-align: center;
+    }
+    h2 {
+      color: #00ffff;
+    }
+    .card {
+      display: inline-block;
+      background: #1a1a1a;
+      padding: 20px;
+      margin: 10px;
+      border: 2px solid #00cccc;
+      border-radius: 10px;
+      width: 270px;
+      transition: transform 0.2s ease;
+      cursor: pointer;
+    }
+    .card:hover {
+      transform: scale(1.05);
+      background: #00ffff33;
+    }
+    .quiz-btn {
+      margin: 4px;
+      padding: 6px 10px;
+      border: 1px solid #00cccc;
+      background: #1a1a1a;
+      color: #00ffcc;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .quiz-btn:hover {
+      background: #00ffcc;
+      color: #000;
+    }
+  </style>
+</head>
+<body>
+  <h2>📖 English – Class 10 (CBSE 2025–26)</h2>
+  <div id="chapterContainer"></div>  <script>
+    const chapters = [
+      // First Flight
+      "Chapter1: A Letter to God",
+      "Chapter2: Nelson Mandela: Long Walk to Freedom",
+      "Chapter3: Two Stories about Flying",
+      "Chapter4: From the Diary of Anne Frank",
+      "Chapter5: The Hundred Dresses – I",
+      "Chapter6: The Hundred Dresses – II",
+      "Chapter7: Glimpses of India",
+      "Chapter8: Mijbil the Otter",
+      "Chapter9: Madam Rides the Bus",
+      "Chapter10: The Sermon at Benares",
+      "Chapter11: The Proposal (Play)",
+      // Footprints Without Feet
+      "Chapter12: A Triumph of Surgery",
+      "Chapter13: The Thief’s Story",
+      "Chapter14: The Midnight Visitor",
+      "Chapter15: A Question of Trust",
+      "Chapter16: Footprints Without Feet",
+      "Chapter17: The Making of a Scientist",
+      "Chapter18: The Necklace",
+      "Chapter19: Bholi",
+      "Chapter20: The Book that Saved the Earth"
+    ];
+
+    const container = document.getElementById("chapterContainer");
+
+    chapters.forEach((chapter, index) => {
+      const chapterDiv = document.createElement("div");
+      chapterDiv.className = "card";
+      chapterDiv.innerHTML = `<b>${chapter}</b><br><br><div id='quizBtns${index}'></div>`;
+
+      const quizBtnsDiv = chapterDiv.querySelector(`#quizBtns${index}`);
+      for (let i = 1; i <= 40; i++) {
+        const btn = document.createElement("button");
+        btn.className = "quiz-btn";
+        btn.textContent = `Quiz ${i}`;
+        btn.onclick = () => startQuiz("English", `Chapter${index + 1}`, `Quiz${i}`);
+        quizBtnsDiv.appendChild(btn);
+      }
+      container.appendChild(chapterDiv);
+    });
+
+    function startQuiz(subject, chapter, quiz) {
+      localStorage.setItem("selectedSubject", subject);
+      localStorage.setItem("selectedChapter", chapter);
+      localStorage.setItem("selectedQuiz", quiz);
+      window.location.href = "quiz.html";
+    }
+  </script></body>
+</html>

@@ -1,0 +1,109 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User History – EduTech</title>
+  <style>
+    body {
+      background: linear-gradient(120deg, #0f0c29, #302b63, #24243e);
+      color: #00ffcc;
+      font-family: 'Segoe UI', sans-serif;
+      padding: 20px;
+    }
+    h2 {
+      text-align: center;
+      color: #00ffff;
+    }
+    table {
+      width: 100%;
+      margin-top: 20px;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #00cccc;
+      text-align: left;
+    }
+    th {
+      background-color: #1f1f3f;
+    }
+    #noData {
+      text-align: center;
+      margin-top: 20px;
+      font-style: italic;
+      color: #cccccc;
+    }
+  </style>
+</head>
+<body>
+  <h2>📜 User Quiz History</h2>
+  <div id="noData">Loading...</div>
+  <table id="historyTable" style="display:none">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Subject</th>
+        <th>Chapter</th>
+        <th>Quiz</th>
+        <th>Score</th>
+        <th>XP Earned</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAnmT_EMUajLzk0OEcuUsA6pjIJgJBqBm4",
+      authDomain: "quiz-dashboard-9a4ea.firebaseapp.com",
+      projectId: "quiz-dashboard-9a4ea",
+      storageBucket: "quiz-dashboard-9a4ea.appspot.com",
+      messagingSenderId: "901225401260",
+      appId: "1:901225401260:web:3879c1e3501ffe1cc08809"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const uid = new URLSearchParams(location.search).get("uid");
+    const table = document.getElementById("historyTable");
+    const tbody = table.querySelector("tbody");
+    const noData = document.getElementById("noData");
+
+    if (!uid) {
+      noData.textContent = "❌ No user ID provided in the URL.";
+    } else {
+      try {
+        const q = query(collection(db, "scores"), where("uid", "==", uid));
+        const snap = await getDocs(q);
+        const records = [];
+        snap.forEach(doc => records.push(doc.data()));
+        records.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+        if (records.length === 0) {
+          noData.textContent = "ℹ️ No quiz history found for this user.";
+        } else {
+          noData.style.display = "none";
+          table.style.display = "table";
+          for (let r of records) {
+            const tr = document.createElement("tr");
+            const d = new Date(r.timestamp).toLocaleString();
+            tr.innerHTML = `
+              <td>${d}</td>
+              <td>${r.subject}</td>
+              <td>${r.chapter}</td>
+              <td>${r.quiz}</td>
+              <td>${r.score || 0}</td>
+              <td>${r.xp || (r.score * 5)}</td>
+            `;
+            tbody.appendChild(tr);
+          }
+        }
+      } catch (e) {
+        console.error(e);
+        noData.textContent = "❌ Error loading history: " + e.message;
+      }
+    }
+  </script></body>
+</html>

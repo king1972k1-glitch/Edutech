@@ -1,0 +1,143 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel – EduTech</title>
+  <style>
+    body {
+      background: linear-gradient(120deg, #0f0c29, #302b63, #24243e);
+      font-family: 'Segoe UI', sans-serif;
+      color: #00ffcc;
+      padding: 20px;
+    }
+    h2 {
+      text-align: center;
+      color: #00ffff;
+    }
+    .section {
+      border: 2px solid #00ffff;
+      border-radius: 10px;
+      padding: 20px;
+      margin: 20px auto;
+      max-width: 900px;
+    }
+    input, select, button, textarea {
+      padding: 10px;
+      margin: 5px;
+      border-radius: 6px;
+      border: 1px solid #00cccc;
+      background: #1a1a1a;
+      color: #00ffcc;
+      width: 100%;
+    }
+    button {
+      cursor: pointer;
+      background: #00ffcc;
+      color: #000;
+      font-weight: bold;
+    }
+    button:hover {
+      background: #00ffff;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      border: 1px solid #00cccc;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background: #1f1f3f;
+    }
+  </style>
+</head>
+<script>
+  const pwd = prompt("Enter admin password:");
+  if (pwd !== "5432109") {
+    alert("❌ Access denied!");
+    location.href = "admin.html";
+  }
+</script>
+<body>
+  <h2>👨‍💻 Admin Panel – EduTech</h2>  <div class="section">
+    <h3>📢 Send Message to All Users</h3>
+    <textarea id="adminMsg" placeholder="Enter announcement message..."></textarea>
+    <button onclick="sendMessage()">📨 Send Message</button>
+  </div>  <div class="section">
+    <h3>📦 Bulk Upload Questions</h3>
+    <select id="bulkSubject">
+      <option value="">-- Select Subject --</option>
+      <option value="Science">Science</option>
+      <option value="Math">Math</option>
+      <option value="S.St">S.St</option>
+      <option value="Hindi">Hindi</option>
+      <option value="English">English</option>
+    </select>
+    <input id="bulkChapter" placeholder="Chapter Name (e.g., Chapter1)" />
+    <input id="quizNumber" placeholder="Quiz Number (1-40)" />
+    <textarea id="bulkData" placeholder='Paste questions in JSON format' rows="10"></textarea>
+    <button onclick="uploadBulkQuestions()">📤 Upload Questions</button>
+    <div id="quizStats"></div>
+  </div>  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getFirestore, collection, doc, setDoc, getDoc, getDocs, query, where
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAnmT_EMUajLzk0OEcuUsA6pjIJgJBqBm4",
+      authDomain: "quiz-dashboard-9a4ea.firebaseapp.com",
+      projectId: "quiz-dashboard-9a4ea",
+      storageBucket: "quiz-dashboard-9a4ea.appspot.com",
+      messagingSenderId: "901225401260",
+      appId: "1:901225401260:web:3879c1e3501ffe1cc08809"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    window.uploadBulkQuestions = async function () {
+      const subject = document.getElementById("bulkSubject").value.trim();
+      const chapter = document.getElementById("bulkChapter").value.trim();
+      const quizNumber = document.getElementById("quizNumber").value.trim();
+      const text = document.getElementById("bulkData").value.trim();
+
+      if (!subject || !chapter || !quizNumber || !text) {
+        return alert("❌ Fill all fields including Quiz Number.");
+      }
+
+      let data;
+      try {
+        data = JSON.parse(text);
+        if (!Array.isArray(data)) throw new Error("Data must be an array");
+      } catch (e) {
+        return alert("❌ Invalid JSON format: " + e.message);
+      }
+
+      try {
+        const docRef = doc(db, "quizzes", `${subject}_${chapter}_Quiz${quizNumber}`);
+        await setDoc(docRef, { questions: data });
+        alert("✅ Quiz uploaded successfully!");
+        document.getElementById("bulkData").value = "";
+        updateQuizCount(subject, chapter);
+      } catch (e) {
+        alert("❌ Upload failed: " + e.message);
+      }
+    };
+
+    async function updateQuizCount(subject, chapter) {
+      const quizCollection = collection(db, "quizzes");
+      const snapshot = await getDocs(quizCollection);
+      let count = 0;
+      snapshot.forEach(doc => {
+        if (doc.id.startsWith(`${subject}_${chapter}_Quiz`)) {
+          count++;
+        }
+      });
+      document.getElementById("quizStats").innerHTML = `🧮 Total quizzes for ${subject} ${chapter}: <b>${count}</b>`;
+    }
+  </script></body>
+</html>

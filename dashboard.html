@@ -1,0 +1,233 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EduTech Dashboard</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #0f0c29, #302b63, #24243e);
+      color: #fff;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #1c1c3c;
+      padding: 10px 20px;
+      box-shadow: 0 2px 10px #00000055;
+      position: relative;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.5em;
+      color: #00ffff;
+    }
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    .bell, .logout {
+      background: transparent;
+      border: none;
+      font-size: 1.5em;
+      color: #00ffff;
+      cursor: pointer;
+      position: relative;
+    }
+    .bell:hover, .logout:hover {
+      color: #ffcc00;
+    }
+    .notification-count {
+      position: absolute;
+      top: 0;
+      right: -6px;
+      background: red;
+      color: white;
+      font-size: 12px;
+      padding: 2px 5px;
+      border-radius: 10px;
+    }
+    .notification-panel {
+      position: absolute;
+      top: 60px;
+      right: 20px;
+      background: #1a1a2a;
+      color: #00ffcc;
+      padding: 10px;
+      border: 1px solid #00cccc;
+      border-radius: 8px;
+      max-width: 300px;
+      display: none;
+    }
+    .notification-panel ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .notification-panel li {
+      padding: 5px 0;
+      border-bottom: 1px solid #00cccc33;
+    }
+    .xp-info {
+      font-size: 0.9em;
+      color: #ffcc00;
+    }
+    main {
+      padding: 20px;
+    }
+    .grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .card {
+      width: 160px;
+      background: #1a1a1a;
+      border: 2px solid #00cccc;
+      border-radius: 10px;
+      padding: 15px;
+      text-align: center;
+      transition: transform 0.2s;
+      cursor: pointer;
+    }
+    .card:hover {
+      transform: scale(1.05);
+      background: #00ffff22;
+    }
+    .card span {
+      font-size: 2em;
+      display: block;
+      margin-bottom: 5px;
+    }
+    .profile-button {
+      display: block;
+      text-align: center;
+      margin-top: 40px;
+    }
+    .profile-button button {
+      padding: 10px 20px;
+      font-size: 1em;
+      background-color: #00cccc;
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .profile-button button:hover {
+      background-color: #00ffff;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>EduTech Dashboard</h1>
+    <div class="header-actions">
+      <div style="position: relative">
+        <button class="bell" onclick="toggleNotifications()" title="Notifications">🔔<span id="notifCount" class="notification-count" style="display:none;">0</span></button>
+        <div class="notification-panel" id="notificationPanel">
+          <strong>📢 Announcements</strong>
+          <ul id="notifList"></ul>
+        </div>
+      </div>
+      <span class="xp-info" id="userXP">XP: 0</span>
+      <button class="logout" onclick="logout()" title="Logout">🚪</button>
+    </div>
+  </header>  <main>
+    <h2>Welcome to Your Learning Space 👋</h2>
+    <div class="grid">
+      <div class="card" onclick="goTo('science.html')">
+        <span>🧪</span>Science
+      </div>
+      <div class="card" onclick="goTo('math.html')">
+        <span>➗</span>Math
+      </div>
+      <div class="card" onclick="goTo('sst.html')">
+        <span>🌍</span>S.St
+      </div>
+      <div class="card" onclick="goTo('english.html')">
+        <span>📖</span>English
+      </div>
+      <div class="card" onclick="goTo('hindi.html')">
+        <span>📝</span>Hindi
+      </div>
+     <div class="card" onclick="goTo('leaderboard.html')">
+        <span>🏆</span>leaderboard 
+      </div>
+    </div><div class="profile-button">
+  <button onclick="goTo('profile.html')">👤 My Profile</button>
+</div>
+
+  </main>  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAnmT_EMUajLzk0OEcuUsA6pjIJgJBqBm4",
+      authDomain: "quiz-dashboard-9a4ea.firebaseapp.com",
+      projectId: "quiz-dashboard-9a4ea",
+      storageBucket: "quiz-dashboard-9a4ea.appspot.com",
+      messagingSenderId: "901225401260",
+      appId: "1:901225401260:web:3879c1e3501ffe1cc08809"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth();
+    const db = getFirestore(app);
+
+    function goTo(page) {
+      window.location.href = page;
+    }
+
+    function toggleNotifications() {
+      const panel = document.getElementById("notificationPanel");
+      panel.style.display = panel.style.display === "none" ? "block" : "none";
+    }
+
+    window.logout = function () {
+      signOut(auth).then(() => {
+        alert("Logged out successfully");
+        location.href = "index.html";
+      });
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) return location.href = "index.html";
+      const userDocRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userDocRef);
+      const xp = userSnap.exists() ? userSnap.data().xp || 0 : 0;
+      document.getElementById("userXP").textContent = `XP: ${xp}`;
+
+      const notifSnap = await getDocs(collection(db, "announcements"));
+      const notifList = document.getElementById("notifList");
+      const notifCount = document.getElementById("notifCount");
+      notifList.innerHTML = "";
+
+      let count = 0;
+      notifSnap.forEach(doc => {
+        const data = doc.data();
+        if (Date.now() - data.timestamp < 86400000) {
+          const li = document.createElement("li");
+          li.textContent = data.message;
+          notifList.appendChild(li);
+          count++;
+        }
+      });
+      if (count > 0) {
+        notifCount.textContent = count;
+        notifCount.style.display = "inline";
+      } else {
+        notifCount.style.display = "none";
+      }
+    });
+  </script><script>
+  function goTo(page) {
+    window.location.href = page;
+  }
+</script></body>
+</html>

@@ -1,0 +1,128 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Edit Profile – EduTech</title>
+  <style>
+    body {
+      background: linear-gradient(120deg, #0f0c29, #302b63, #24243e);
+      color: #00ffcc;
+      font-family: 'Segoe UI', sans-serif;
+      padding: 40px;
+      text-align: center;
+    }
+    h2 {
+      color: #00ffff;
+      margin-bottom: 30px;
+    }
+    input, select, button {
+      display: block;
+      margin: 10px auto;
+      padding: 10px;
+      width: 90%;
+      max-width: 400px;
+      background: #1a1a1a;
+      border: 1px solid #00cccc;
+      border-radius: 6px;
+      color: #00ffcc;
+      font-size: 1em;
+    }
+    button {
+      background: #00ffcc;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #00ffff;
+    }
+    img {
+      width: 100px;
+      border-radius: 50%;
+      margin: 10px auto;
+    }
+  </style>
+</head>
+<body>
+  <h2>🧑‍🎓 Edit Profile</h2>
+  <img id="avatarPreview" src="" alt="Avatar Preview" />
+  <input type="text" id="nameInput" placeholder="Enter new name" />
+ <select id="avatarSelect">
+  <option value="Naruto.png" data-xp="1500">Naruto (1500)</option>
+  <option value="Itachi.png" data-xp="2400">Itachi (2400)</option>
+  <option value="Gojo.png" data-xp="0">Gojo (🥈 0XP)</option>
+  <option value="Luffy.png" data-xp="800">Luffy (🥇 800 XP)</option>
+  <option value="Zoro.png" data-xp="1200">Zoro (🏆 1200 XP)</option>
+  <option value="Kaneki.png" data-xp="0">Kaneki (0XP)</option>
+<option value="Sanji.png" data-xp="400"> Sanji (0)</option>
+<option value="Nami.png" data-xp="0"> Nami (0)</option>
+<option value="Robin.png" data-xp="0"> Robin (0)</option>
+<option value="Hinata.png" data-xp="1800"> Hinata (1800)</option>
+<option value="Makima.png" data-xp="2400"> Makima (2400)</option>
+
+
+</select>
+  <button onclick="saveProfile()">💾 Save Profile</button>  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAnmT_EMUajLzk0OEcuUsA6pjIJgJBqBm4",
+      authDomain: "quiz-dashboard-9a4ea.firebaseapp.com",
+      projectId: "quiz-dashboard-9a4ea",
+      storageBucket: "quiz-dashboard-9a4ea.appspot.com",
+      messagingSenderId: "901225401260",
+      appId: "1:901225401260:web:3879c1e3501ffe1cc08809"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth();
+
+    const nameInput = document.getElementById("nameInput");
+    const avatarSelect = document.getElementById("avatarSelect");
+    const avatarPreview = document.getElementById("avatarPreview");
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) return location.href = "index.html";
+      const ref = doc(db, "users", user.uid);
+      const snap = await getDoc(ref);
+      if (snap.exists()) {
+        const data = snap.data();
+        nameInput.value = data.name || "";
+        avatarSelect.value = data.avatar;
+        avatarPreview.src = data.avatar;
+      }
+    });
+
+    avatarSelect.addEventListener("change", () => {
+      avatarPreview.src = avatarSelect.value;
+    });
+
+    window.saveProfile = async function () {
+      const selectedOption = avatarSelect.options[avatarSelect.selectedIndex];
+      const requiredXP = parseInt(selectedOption.dataset.xp || '0');
+      const user = auth.currentUser;
+      if (!user) return;
+      const ref = doc(db, "users", user.uid);
+      const snap = await getDoc(ref);
+      const userXP = snap.exists() ? (snap.data().xp || 0) : 0;
+      if (userXP < requiredXP) {
+        return alert(`❌ You need ${requiredXP} XP to unlock this avatar.`);
+      }
+      const user = auth.currentUser;
+      if (!user) return;
+      const name = nameInput.value.trim();
+      const avatar = avatarSelect.value;
+      if (!name || !avatar) return alert("Please fill out all fields.");
+      try {
+        const ref = doc(db, "users", user.uid);
+        await updateDoc(ref, { name: name, avatar: avatar });
+        alert("✅ Profile updated successfully!");
+      } catch (e) {
+        alert("❌ Failed to update profile: " + e.message);
+      }
+    };
+  </script></body>
+</html>
