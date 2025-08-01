@@ -1,0 +1,149 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leaderboard – EduTech</title>
+  <style>
+    body {
+      background: #1a1a1a;
+      font-family: 'Segoe UI', sans-serif;
+      color: #eeeeee;
+      padding: 20px;
+    }
+    h2 {
+      text-align: center;
+      color: #ffffff;
+    }
+    select {
+      padding: 8px;
+      margin: 5px;
+      border-radius: 5px;
+      background: #2c2c2c;
+      color: #ffffff;
+      border: 1px solid #888;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #444;
+      text-align: left;
+    }
+    th {
+      background: #333;
+    }
+    .avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+  <h2>Leaderboard</h2>  <div style="text-align:center;">
+    <label>Subject:</label>
+    <select id="subjectFilter">
+      <option value="all">All</option>
+      <option value="Science">Science</option>
+      <option value="Math">Math</option>
+      <option value="S.St">S.St</option>
+      <option value="English">English</option>
+      <option value="Hindi">Hindi</option>
+    </select><label>Chapter:</label>
+<select id="chapterFilter">
+  <option value="all">All</option>
+  <option value="Chapter 1">Chapter 1</option>
+  <option value="Chapter 2">Chapter 2</option>
+  <option value="Chapter 3">Chapter 3</option>
+</select>
+
+<label>Time:</label>
+<select id="timeFilter">
+  <option value="all">All Time</option>
+  <option value="7">Last 7 Days</option>
+  <option value="30">Last 30 Days</option>
+  <option value="1">Today</option>
+</select>
+<button onclick="loadLeaderboard()">🔃 Refresh</button>
+
+  </div>  <table>
+    <thead>
+      <tr>
+        <th>Rank</th>
+        <th>User</th>
+        <th>XP</th>
+      </tr>
+    </thead>
+    <tbody id="leaderboardTable"></tbody>
+  </table>  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+    import { getFirestore, collection, getDocs, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAnmT_EMUajLzk0OEcuUsA6pjIJgJBqBm4",
+      authDomain: "quiz-dashboard-9a4ea.firebaseapp.com",
+      projectId: "quiz-dashboard-9a4ea",
+      storageBucket: "quiz-dashboard-9a4ea.appspot.com",
+      messagingSenderId: "901225401260",
+      appId: "1:901225401260:web:3879c1e3501ffe1cc08809"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    async function loadLeaderboard() {
+      const table = document.getElementById("leaderboardTable");
+      table.innerHTML = "<tr><td colspan='3'>Loading...</td></tr>";
+
+      const subject = document.getElementById("subjectFilter").value;
+      const chapter = document.getElementById("chapterFilter").value;
+      const days = parseInt(document.getElementById("timeFilter").value);
+
+      const now = Date.now();
+      const snap = await getDocs(collection(db, "scores"));
+      const scores = {};
+
+      for (let docSnap of snap.docs) {
+        const d = docSnap.data();
+        if (subject !== "all" && d.subject !== subject) continue;
+        if (chapter !== "all" && d.chapter !== chapter) continue;
+        if (!isNaN(days) && now - (d.timestamp || 0) > days * 24 * 60 * 60 * 1000) continue;
+
+        if (!scores[d.uid]) scores[d.uid] = { xp: 0, name: '', avatar: '' };
+        scores[d.uid].xp += d.xp || d.score * 5;
+      }
+
+      const usersSnap = await getDocs(collection(db, "users"));
+      usersSnap.forEach(u => {
+        if (scores[u.id]) {
+          const data = u.data();
+          scores[u.id].name = data.name || "Unknown";
+          scores[u.id].avatar = data.avatar || null;
+        }
+      });
+
+      const result = Object.entries(scores).map(([uid, data]) => data);
+      result.sort((a, b) => b.xp - a.xp);
+
+      table.innerHTML = "";
+      result.forEach((u, i) => {
+        const emoji = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '⭐';
+        const avatarTag = u.avatar ? `<img src="/avatars/${u.avatar}.png" class="avatar" />` : "";
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${emoji} #${i + 1}</td>
+          <td>${avatarTag}${u.name}</td>
+          <td>${u.xp}</td>
+        `;
+        table.appendChild(tr);
+      });
+    }
+
+    loadLeaderboard();
+  </script></body>
+</html>
